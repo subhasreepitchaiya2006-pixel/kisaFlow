@@ -3,17 +3,23 @@ import Header from './components/Header';
 import LoginPage from './components/Auth/LoginPage';
 import RegisterPage from './components/Auth/RegisterPage';
 import FarmerPortalPage from './components/Farmer/FarmerPortalPage';
+import FPODashboard from './components/FPODashboard';
+import BuyerMarketplace from './components/BuyerMarketplace';
 import ConsumerPortalPage from './components/Consumer/ConsumerPortalPage';
+import DemandAnalytics from './components/DemandAnalytics';
+import RouteOptimizer from './components/RouteOptimizer';
+import ONDCInspector from './components/ONDCInspector';
 import AdminDashboardPage from './components/Admin/AdminDashboardPage';
 import RealizationCalculatorModal from './components/RealizationCalculatorModal';
 import { MOCK_FARMER_LISTINGS } from './data/mockData';
 import { TRANSLATIONS } from './utils/translations';
-import { User, Users, ShieldCheck } from 'lucide-react';
+import { User, Users, ShoppingBag, LineChart, Route, Network, Building2 } from 'lucide-react';
 
 export default function App() {
   const [currentLang, setCurrentLang] = useState('en');
   const [currentUser, setCurrentUser] = useState(null); // null = Auth view
   const [authView, setAuthView] = useState('login'); // 'login' | 'register'
+  const [activeTab, setActiveTab] = useState('farmer'); // 'farmer'|'fpo'|'consumer'|'buyerMarket'|'analytics'|'logistics'|'ondc'|'admin'
   const [isCalcOpen, setIsCalcOpen] = useState(false);
   const [farmerListings, setFarmerListings] = useState(MOCK_FARMER_LISTINGS);
 
@@ -21,10 +27,16 @@ export default function App() {
 
   const handleLogin = (user) => {
     setCurrentUser(user);
+    if (user.role === 'farmer') setActiveTab('farmer');
+    else if (user.role === 'consumer') setActiveTab('consumer');
+    else if (user.role === 'admin') setActiveTab('admin');
   };
 
   const handleRegister = (user) => {
     setCurrentUser(user);
+    if (user.role === 'farmer') setActiveTab('farmer');
+    else if (user.role === 'consumer') setActiveTab('consumer');
+    else if (user.role === 'admin') setActiveTab('admin');
   };
 
   const handleLogout = () => {
@@ -36,9 +48,19 @@ export default function App() {
     setFarmerListings([newListing, ...farmerListings]);
   };
 
+  const masterTabs = [
+    { id: 'farmer', label: t.farmer, icon: User, badge: 'Intake & Profit' },
+    { id: 'fpo', label: t.fpo, icon: Users, badge: 'Lot Pooling' },
+    { id: 'consumer', label: t.consumer, icon: ShoppingBag, badge: 'Orders & Tracking' },
+    { id: 'analytics', label: t.analytics, icon: LineChart, badge: 'Agmarknet AI' },
+    { id: 'logistics', label: t.logistics, icon: Route, badge: 'GIS Route Map' },
+    { id: 'ondc', label: t.ondc, icon: Network, badge: 'Beckn API' },
+    { id: 'admin', label: t.admin, icon: Building2, badge: 'Govt Oversight' },
+  ];
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-white">
-      {/* Top Navbar Header */}
+      {/* Top Header Navbar */}
       <Header
         currentLang={currentLang}
         onChangeLang={setCurrentLang}
@@ -47,46 +69,33 @@ export default function App() {
         onOpenCalc={() => setIsCalcOpen(true)}
       />
 
-      {/* Role Switcher Bar (Visible when logged in to switch perspectives during testing) */}
+      {/* Master Feature Navigation Bar (Visible when logged in to access all PPT engines) */}
       {currentUser && (
-        <nav className="bg-slate-900/90 border-b border-slate-800 px-4 py-2 sticky top-[73px] z-40">
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-xs font-bold">
-              <span className="text-slate-400">Active View:</span>
-              <button
-                onClick={() => setCurrentUser({ ...currentUser, role: 'farmer' })}
-                className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
-                  currentUser.role === 'farmer' ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-800 text-slate-400 hover:text-white'
-                }`}
-              >
-                <User className="w-3.5 h-3.5" />
-                <span>{t.farmer}</span>
-              </button>
-
-              <button
-                onClick={() => setCurrentUser({ ...currentUser, role: 'consumer' })}
-                className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
-                  currentUser.role === 'consumer' ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-800 text-slate-400 hover:text-white'
-                }`}
-              >
-                <Users className="w-3.5 h-3.5" />
-                <span>{t.consumer}</span>
-              </button>
-
-              <button
-                onClick={() => setCurrentUser({ ...currentUser, role: 'admin' })}
-                className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
-                  currentUser.role === 'admin' ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-800 text-slate-400 hover:text-white'
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>{t.admin}</span>
-              </button>
-            </div>
-
-            <div className="text-xs text-slate-400 hidden sm:block">
-              SIH 2026 Problem Statement ID: <strong className="text-white">26033</strong>
-            </div>
+        <nav className="bg-slate-900/90 border-b border-slate-800 px-2 py-2 sticky top-[73px] z-40">
+          <div className="max-w-7xl mx-auto flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+            {masterTabs.map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-md shadow-emerald-950/50 border border-emerald-400/40'
+                      : 'bg-slate-950/50 text-slate-400 hover:text-white hover:bg-slate-800/60 border border-slate-800/50'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-100' : 'text-slate-400'}`} />
+                  <span>{tab.label}</span>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-medium ${
+                    isActive ? 'bg-emerald-900/60 text-emerald-200 border border-emerald-400/30' : 'bg-slate-800 text-slate-500'
+                  }`}>
+                    {tab.badge}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </nav>
       )}
@@ -109,7 +118,7 @@ export default function App() {
           )
         ) : (
           <>
-            {currentUser.role === 'farmer' && (
+            {activeTab === 'farmer' && (
               <FarmerPortalPage
                 currentLang={currentLang}
                 listings={farmerListings}
@@ -117,10 +126,22 @@ export default function App() {
                 onOpenCalc={() => setIsCalcOpen(true)}
               />
             )}
-            {currentUser.role === 'consumer' && (
+            {activeTab === 'fpo' && (
+              <FPODashboard farmerListings={farmerListings} />
+            )}
+            {activeTab === 'consumer' && (
               <ConsumerPortalPage currentLang={currentLang} />
             )}
-            {currentUser.role === 'admin' && (
+            {activeTab === 'analytics' && (
+              <DemandAnalytics />
+            )}
+            {activeTab === 'logistics' && (
+              <RouteOptimizer />
+            )}
+            {activeTab === 'ondc' && (
+              <ONDCInspector />
+            )}
+            {activeTab === 'admin' && (
               <AdminDashboardPage currentLang={currentLang} />
             )}
           </>
@@ -133,7 +154,7 @@ export default function App() {
       {/* Footer */}
       <footer className="bg-slate-900 border-t border-slate-800 py-6 px-4 text-center text-xs text-slate-500 space-y-2">
         <div className="flex items-center justify-center gap-2 font-mono text-emerald-400 font-bold">
-          <span>KisanFlow Platform</span>
+          <span>KisanFlow Unified Master Application</span>
           <span>•</span>
           <span>SIH 2026 PS-26033</span>
           <span>•</span>
